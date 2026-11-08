@@ -56,25 +56,25 @@ public:
     {
         cout << left
             << setw(10) << "[STT]"
-            << setw(15) << "[Quan He]"
-            << setw(25) << "[Ten]"
-            << setw(15) << "[SDT]"
-            << setw(15) << "[Ngay Sinh]"
-            << setw(50) << "[Ghi Chu]"
+            << setw(15) << "| [Quan He]"
+            << setw(20) << "| [Ten]"
+            << setw(15) << "| [SDT]"
+            << setw(15) << "| [Ngay Sinh]"
+            << setw(25) << "| [Ghi Chu]"
             << endl;
-        cout << string(130, '-') << endl;
+        cout << string(100, '-') << endl;
 
         for (size_t i = 0; i < ListContacts.size(); i++) {
             cout << left
                 << setw(10) << (i + 1)
-                << setw(15) << ListContacts[i]->GetNameRelation()
-                << setw(25) << ListContacts[i]->GetName()
-                << setw(15) << ListContacts[i]->GetPhone()
-                << setw(15) << ListContacts[i]->GetBirthday().DateToString()
-                << setw(50) << ListContacts[i]->GetNote()
+                << setw(15) << "| " + ListContacts[i]->GetNameRelation()
+                << setw(20) << "| " + ListContacts[i]->GetName()
+                << setw(15) << "| " + ListContacts[i]->GetPhone()
+                << setw(15) << "| " + ListContacts[i]->GetBirthday().DateToString()
+                << setw(25) << "| " + ListContacts[i]->GetNote()
                 << endl;
         }
-        cout << string(130, '-') << endl;
+        cout << string(100, '-') << endl;
     }
 
 
