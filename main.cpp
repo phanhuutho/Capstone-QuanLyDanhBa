@@ -6,6 +6,7 @@ using namespace std;
 int main()
 {
 	ContactManager manager("danh_ba.csv");
+	manager.InitContactManage();
 	manager.LoadFromFile();
 	manager.DisplayListContact();
 	return 0;
