@@ -8,6 +8,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
+#include <chrono>
 
 using namespace std;
 
@@ -19,8 +20,8 @@ private:
     vector<RelationContact*> ListRelations; // Mang dong con tro lop RelationContact
 
     vector<Contact*> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
+    bool IsSortDESC = false;
 public:
-
     void InitContactManage()
     {
         //Init ListContacts voi 26 vector<Contact> 26 chu cai
@@ -59,7 +60,6 @@ public:
 
     ~ContactManager() 
     {
-
         ClearAll();
     }
 
@@ -130,12 +130,12 @@ public:
         cout << left
             << setw(10) << "[STT]"
             << setw(15) << "| [Quan He]"
-            << setw(20) << "| [Ten]"
+            << setw(30) << "| [Ten]"
             << setw(15) << "| [SDT]"
             << setw(15) << "| [Ngay Sinh]"
             << setw(25) << "| [Ghi Chu]"
             << endl;
-        cout << string(100, '-') << endl;
+        cout << string(110, '-') << endl;
 
         int i = 0;
         for (vector<Contact*> vector_c : ListContacts)
@@ -145,7 +145,7 @@ public:
                 cout << left
                     << setw(10) << (i + 1)
                     << setw(15) << "| " + c->GetNameRelation()
-                    << setw(20) << "| " + c->GetName()
+                    << setw(30) << "| " + c->GetName()
                     << setw(15) << "| " + c->GetPhone()
                     << setw(15) << "| " + c->GetBirthday().DateToString()
                     << setw(25) << "| " + c->GetNote()
@@ -153,7 +153,7 @@ public:
                 i++;
             }
         }
-        cout << string(100, '-') << endl;
+        cout << string(110, '-') << endl;
     }
 
 
@@ -189,7 +189,22 @@ public:
 
     void SortContact_ASC()
     {
-        for (vector<Contact*> vector_c : ListContacts)
+        if (IsSortDESC)
+        {
+            int start = 0;
+            int end = ListContacts.size() - 1;
+
+            while (start < end)
+            {
+                swap(ListContacts[start], ListContacts[end]);
+                start++;
+                end--;
+            }
+
+            IsSortDESC = false;
+        }
+
+        for (vector<Contact*>& vector_c : ListContacts)
         {
             sort(vector_c.begin(), vector_c.end(), [](const Contact* c1, const Contact* c2) {
                 return GetLastName(c1->GetName()) < GetLastName(c2->GetName());
@@ -199,7 +214,22 @@ public:
 
     void SortContact_DESC()
     {
-        for (vector<Contact*> vector_c : ListContacts)
+        if (!IsSortDESC)
+        {
+            int start = 0;
+            int end = ListContacts.size() - 1;
+
+            while (start < end)
+            {
+                swap(ListContacts[start], ListContacts[end]);
+                start++;
+                end--;
+            }
+
+            IsSortDESC = true;
+        }
+
+        for (vector<Contact*>& vector_c : ListContacts)
         {
             sort(vector_c.begin(), vector_c.end(), [](const Contact* c1, const Contact* c2) {
                 return GetLastName(c1->GetName()) > GetLastName(c2->GetName());
@@ -246,6 +276,10 @@ public:
         }
         else
         {
+            if (_birth != "")
+            {
+                birth.FromString(_birth);
+            }
             Contact* c = new Contact(_name, _phone, _relation, _type, birth, _note);
             int idx = FindIndexVectorContactByName(_name);
             ListContacts[idx].push_back(c);
@@ -375,6 +409,65 @@ public:
         }
         file.close();
     }
+
+    vector<Contact*> GetListContactValidInYear() const
+    {
+        vector<Contact*> result;
+
+        chrono::system_clock::time_point now = chrono::system_clock::now();
+        time_t currentTime = chrono::system_clock::to_time_t(now);
+
+        tm localTime;
+        localtime_s(&localTime, &currentTime);
+        int month = localTime.tm_mon + 1;
+        int day = localTime.tm_mday;
+
+        for (vector<Contact*> vector_c : ListContacts)
+        {
+            for (Contact* c : vector_c)
+            {
+                if (!c->GetBirthday().IsEmpty() && (c->GetBirthday().GetMonth() > month || (c->GetBirthday().GetMonth() == month && c->GetBirthday().GetDay() >= day)))
+                {
+                    result.push_back(c);
+                }
+            }
+        }
+
+        sort(result.begin(), result.end(), [](const Contact* c1, const Contact* c2) {
+            return c1->GetBirthday().CountDayToBirthdayInCurrentYear() < c2->GetBirthday().CountDayToBirthdayInCurrentYear();
+        });
+
+        return result;
+    }
+
+    void DisplayListContact(vector<Contact*> vector_c)
+    {
+        cout << left
+            << setw(10) << "[STT]"
+            << setw(15) << "| [Quan He]"
+            << setw(30) << "| [Ten]"
+            << setw(15) << "| [SDT]"
+            << setw(15) << "| [Ngay Sinh]"
+            << setw(25) << "| [Ghi Chu]"
+            << endl;
+        cout << string(110, '-') << endl;
+
+        int i = 0;
+        for (Contact* c : vector_c)
+        {
+            cout << left
+                << setw(10) << (i + 1)
+                << setw(15) << "| " + c->GetNameRelation()
+                << setw(30) << "| " + c->GetName()
+                << setw(15) << "| " + c->GetPhone()
+                << setw(15) << "| " + c->GetBirthday().DateToString()
+                << setw(25) << "| " + c->GetNote()
+                << endl;
+            i++;
+        }
+        cout << string(110, '-') << endl;
+    }
+
     //---------------------------------------------------
 
 

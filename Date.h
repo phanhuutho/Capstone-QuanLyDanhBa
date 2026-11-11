@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <sstream>
+#include <chrono>
 #include <ctime>
 using namespace std;
 
@@ -133,26 +134,31 @@ public:
 		return !(*this < d) && !(*this == d);
 	}
 
-	/*int CountDayToBirthday() const
+	int CountDayToBirthdayInCurrentYear() const
 	{
-		time_t now = time(nullptr);
-		tm today = *localtime(&now);
+		chrono::system_clock::time_point now = chrono::system_clock::now();
+		time_t currentTime = chrono::system_clock::to_time_t(now);
+
+		tm localTime;
+		localtime_s(&localTime, &currentTime);
+
+		int year = localTime.tm_year; //localTime.tm_year ket qua tinh tu nam 1900 tro di. vi du nhu 2026 thi ket qua cua localTime.tm_year la 126.
+		int month = localTime.tm_mon; //localTime luu thang bat dau tu 0 den 11. tuong duong thang 1->12.
+		int day = localTime.tm_mday;
 
 		tm birthday = {};
 		birthday.tm_mday = Day;
-		birthday.tm_mon = Month - 1;
-		birthday.tm_year = today.tm_year;
+		birthday.tm_mon = Month - 1; //birthday.tm_mon phai tru 1 de dong bo voi cach tinh thang cua localTime.tm_year
+		birthday.tm_year = year;
 
 		time_t birthTime = mktime(&birthday);
 
-		if (difftime(birthTime, now) < 0)
+		if (difftime(birthTime, currentTime) < 0)
 		{
-			birthday.tm_year++;
-			birthTime = mktime(&birthday);
+			return -1;
 		}
+		double seconds = difftime(birthTime, currentTime);
 
-		double seconds = difftime(birthTime, now);
-
-		return static_cast<int>(seconds / (60 * 60 * 24));
-	}*/
+		return (int)(seconds / (60 * 60 * 24));
+	}
 };
