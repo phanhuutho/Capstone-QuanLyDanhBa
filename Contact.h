@@ -31,6 +31,7 @@ public:
     string GetPhone() const { return Phone; }
     void SetPhone(string _phone) { Phone = _phone; }
     string GetNameRelation() const { return RelationName; }
+    void SetRelationName(string _relation) { RelationName = _relation; }
     void SetRelation(int _type) { TypeRelation = _type; }
     string GetNote() const { return Note; }
     void SetNote(string _note) { Note = _note; }
