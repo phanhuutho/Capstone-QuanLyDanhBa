@@ -15,12 +15,11 @@ using namespace std;
 class ContactManager
 {
 private:
-    vector<vector<Contact*>> ListContacts; // Co 26 vector<Contact>, moi vector<Contact> dai dien cho mot chu cai. co 26 chu cai: a,b,c,d,e,f,...x,y,z va vi tri a tuong duong la 0, z la 25
+    vector<vector<Contact*>> ListContacts; // Co 26 vector<Contact*>, moi vector<Contact*> dai dien cho mot chu cai. co 26 chu cai: a,b,c,d,e,f,...x,y,z va vi tri a tuong duong la 0, z la 25
     string Filename;
     vector<RelationContact*> ListRelations; // Mang dong con tro lop RelationContact
 
     vector<Contact*> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
-    bool IsSortDESC = false;
 public:
     void InitContactManage()
     {
@@ -125,7 +124,12 @@ public:
         return nullptr;
     }
 
-    void DisplayListContact()
+    vector<vector<Contact*>> GetListContacts() const
+    {
+        return ListContacts;
+    }
+
+    void DisplayListContact(vector<vector<Contact*>> &lstContact)
     {
         cout << left
             << setw(10) << "[STT]"
@@ -138,17 +142,17 @@ public:
         cout << string(110, '-') << endl;
 
         int i = 0;
-        for (vector<Contact*> vector_c : ListContacts)
+        for (vector<Contact*> vector_c : lstContact)
         {
             for (Contact* c : vector_c)
             {
                 cout << left
                     << setw(10) << (i + 1)
-                    << setw(15) << "| " + c->GetNameRelation()
-                    << setw(30) << "| " + c->GetName()
-                    << setw(15) << "| " + c->GetPhone()
-                    << setw(15) << "| " + c->GetBirthday().DateToString()
-                    << setw(25) << "| " + c->GetNote()
+                    << setw(15) << ("| " + c->GetRelationName())
+                    << setw(30) << ("| " + c->GetName())
+                    << setw(15) << ("| " + c->GetPhone())
+                    << setw(15) << ("| " + c->GetBirthday().DateToString())
+                    << setw(45) << ("| " + c->GetNote())
                     << endl;
                 i++;
             }
@@ -187,24 +191,9 @@ public:
         }
     }
 
-    void SortContact_ASC()
+    void SortContact_ASC(vector<vector<Contact*>> &lstContact)
     {
-        if (IsSortDESC)
-        {
-            int start = 0;
-            int end = ListContacts.size() - 1;
-
-            while (start < end)
-            {
-                swap(ListContacts[start], ListContacts[end]);
-                start++;
-                end--;
-            }
-
-            IsSortDESC = false;
-        }
-
-        for (vector<Contact*>& vector_c : ListContacts)
+        for (vector<Contact*>& vector_c : lstContact)
         {
             sort(vector_c.begin(), vector_c.end(), [](const Contact* c1, const Contact* c2) {
                 return GetLastName(c1->GetName()) < GetLastName(c2->GetName());
@@ -212,24 +201,24 @@ public:
         }
     }
 
-    void SortContact_DESC()
+    //Hoan vi gia tri cua cap mang phan tu 0 vs 25, 1 vs 24, 2 vs 23,....., 12 vs 13
+    void Swap(vector<vector<Contact*>> &lstContact) const
     {
-        if (!IsSortDESC)
+        int start = 0;
+        int end = lstContact.size() - 1;
+
+        while (start < end)
         {
-            int start = 0;
-            int end = ListContacts.size() - 1;
-
-            while (start < end)
-            {
-                swap(ListContacts[start], ListContacts[end]);
-                start++;
-                end--;
-            }
-
-            IsSortDESC = true;
+            swap(lstContact[start], lstContact[end]);
+            start++;
+            end--;
         }
+    }
 
-        for (vector<Contact*>& vector_c : ListContacts)
+    void SortContact_DESC(vector<vector<Contact*>> &lstContact)
+    {
+        Swap(lstContact);
+        for (vector<Contact*>& vector_c : lstContact)
         {
             sort(vector_c.begin(), vector_c.end(), [](const Contact* c1, const Contact* c2) {
                 return GetLastName(c1->GetName()) > GetLastName(c2->GetName());
@@ -302,11 +291,11 @@ public:
         while (getline(file, line)) { //doc du lieu tung dong va gan du lieu tung dong vao bien chuoi ky tu 'line'
             stringstream ss(line); //tao doi duong ss stringstream de xu ly lay du lieu cua lien lac tu chuoi ky tu 'line' 
 
-            getline(ss, relation, '|'); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'relation'
-            getline(ss, name, '|'); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'name'
-            getline(ss, phone, '|'); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'phone'
-            getline(ss, strBirth, '|'); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'strBirth'
-            getline(ss, note, '|'); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'note'
+            getline(ss, relation, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'relation'
+            getline(ss, name, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'name'
+            getline(ss, phone, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'phone'
+            getline(ss, strBirth, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'strBirth'
+            getline(ss, note, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'note'
 
             birth.FromString(strBirth); //dung ham xu ly chuoi ngay thanh kieu du lieu Date
 
@@ -327,11 +316,11 @@ public:
         while (getline(file, line)) {
             stringstream ss(line);
 
-            getline(ss, relation, '|');
-            getline(ss, name, '|');
-            getline(ss, phone, '|');
-            getline(ss, strBirth, '|');
-            getline(ss, note, '|');
+            getline(ss, relation, ',');
+            getline(ss, name, ',');
+            getline(ss, phone, ',');
+            getline(ss, strBirth, ',');
+            getline(ss, note, ',');
 
             birth.FromString(strBirth);
 
@@ -355,7 +344,7 @@ public:
                                 CreditRelation(relation, type);
 
                                 c->SetName(name);
-                                c->SetRelation(type);
+                                c->SetTypeRelation(type);
                                 c->SetRelationName(relation);
                                 if (strBirth != "")
                                 {
@@ -440,7 +429,7 @@ public:
         return result;
     }
 
-    void DisplayListContact(vector<Contact*> vector_c)
+    void DisplayListContact(vector<Contact*> &vector_c)
     {
         cout << left
             << setw(10) << "[STT]"
@@ -457,11 +446,11 @@ public:
         {
             cout << left
                 << setw(10) << (i + 1)
-                << setw(15) << "| " + c->GetNameRelation()
-                << setw(30) << "| " + c->GetName()
-                << setw(15) << "| " + c->GetPhone()
-                << setw(15) << "| " + c->GetBirthday().DateToString()
-                << setw(25) << "| " + c->GetNote()
+                << setw(15) << ("| " + c->GetRelationName())
+                << setw(30) << ("| " + c->GetName())
+                << setw(15) << ("| " + c->GetPhone())
+                << setw(15) << ("| " + c->GetBirthday().DateToString())
+                << setw(45) << ("| " + c->GetNote())
                 << endl;
             i++;
         }
