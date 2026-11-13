@@ -22,8 +22,21 @@ int main()
 	lstASC = manager.GetListContacts();
 	DisplayListContact(lstASC);
 
+	vector<RelationContact*> lstRelation = manager.GetListRelations();
+	DisplayListRelation(lstRelation);
+
+	manager.DeleteRelation(3);
+	lstRelation = manager.GetListRelations();
+	DisplayListRelation(lstRelation);
+
+	int type;
+	manager.CreditRelation("Relation Add", type);
+	lstRelation = manager.GetListRelations();
+	DisplayListRelation(lstRelation);
+
 	lstDESC.clear();
 	lstASC.clear();
+	lstRelation.clear();
 
 	return 0;
 }

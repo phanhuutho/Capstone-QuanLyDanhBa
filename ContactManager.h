@@ -197,25 +197,28 @@ public:
 
     void CreditRelation(string relation, int& type)
     {
-        RelationContact* re;
+        int max = RelationContact::GetMax();
         if (ListRelations.size() == 0)
         {
-            type = 1;
-            re = new RelationContact(type, relation);
+            type = max + 1;
+            RelationContact* re = new RelationContact(type, relation);
+            RelationContact::SetMax(type);
             ListRelations.push_back(re);
         }
         else
         {
             bool chkExistRelation = false;
             RelationContact* re = FindRelationByName(relation, chkExistRelation);
+            RelationContact::SetMax(max - 1);
             if (chkExistRelation)
             {
                 type = re->GetTypeRelation();
             }
             else
             {
-                type = ListRelations.size() + 1;
-                re = new RelationContact(type, relation);
+                type = max;
+                RelationContact* re = new RelationContact(type, relation);
+                RelationContact::SetMax(type);
                 ListRelations.push_back(re);
             }
         }
@@ -428,11 +431,11 @@ public:
         }
     }
 
-    void DeleteRelation(RelationContact& reDelete)
+    void DeleteRelation(const int type)
     {
         for (vector<RelationContact*>::iterator it = ListRelations.begin(); it != ListRelations.end();)
         {
-            if ((*it)->GetTypeRelation() == reDelete.GetTypeRelation())
+            if ((*it)->GetTypeRelation() == type)
             {
                 delete* it;
                 it = ListRelations.erase(it);
