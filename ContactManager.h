@@ -21,7 +21,6 @@ private:
     vector<RelationContact*> ListRelations; // Mang dong con tro lop RelationContact
 
     vector<Contact*> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
-public:
     void InitContactManage()
     {
         //Init ListContacts voi 26 vector<Contact> 26 chu cai
@@ -53,9 +52,64 @@ public:
         ListContacts.push_back(z);
     }
 
+    void AddContact(int type, string relation, string name, string phone, string birth = "", string note = "")
+    {
+        Date dBirth;
+        bool foundByPhone = false;
+
+        Contact* cFoundByPhone = FindByPhone(phone, foundByPhone);
+
+        if (foundByPhone)
+        {
+            for (vector<Contact*> vector_c : ListContacts)
+            {
+                for (Contact* c : vector_c)
+                {
+                    if (cFoundByPhone->GetPhone() == c->GetPhone())
+                    {
+                        if (cFoundByPhone->GetBirthday().IsEmpty())
+                        {
+                            if (birth != "")
+                            {
+                                dBirth.FromString(birth);
+                                c->SetBirthday(dBirth);
+                            }
+                        }
+
+                        if (cFoundByPhone->GetNote().empty())
+                        {
+                            if (note != "")
+                            {
+                                c->SetNote(note);
+                            }
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (birth != "")
+            {
+                dBirth.FromString(birth);
+            }
+            Contact* c = new Contact(name, phone, relation, type, dBirth, note);
+            int idx = FindIndexVectorContactByName(name);
+            ListContacts[idx].push_back(c);
+
+            //sap xep thu tu ten trong mang tuong ung theo chu cai dau tien cua ten
+            sort(ListContacts[idx].begin(), ListContacts[idx].end(), [](const Contact* c1, const Contact* c2) {
+                return GetLastName(c1->GetName()) < GetLastName(c2->GetName());
+                });
+        }
+    }
+public:
+
     ContactManager() 
     {
-
+        InitContactManage();
     }
 
     ~ContactManager() 
@@ -136,7 +190,10 @@ public:
     }
 
     //Huu Tho -------------------------------------------
-    ContactManager(string _filename) : Filename(_filename) {}
+    ContactManager(string _filename) : Filename(_filename) 
+    {
+        InitContactManage();
+    }
 
     void CreditRelation(string relation, int& type)
     {
@@ -161,60 +218,6 @@ public:
                 re = new RelationContact(type, relation);
                 ListRelations.push_back(re);
             }
-        }
-    }
-
-    void AddContact(int type, string relation, string name, string phone, string birth = "", string note = "")
-    {
-        Date dBirth;
-        bool foundByPhone = false;
-
-        Contact* cFoundByPhone = FindByPhone(phone, foundByPhone);
-
-        if (foundByPhone)
-        {
-            for (vector<Contact*> vector_c : ListContacts)
-            {
-                for (Contact* c : vector_c)
-                {
-                    if (cFoundByPhone->GetPhone() == c->GetPhone())
-                    {
-                        if (cFoundByPhone->GetBirthday().IsEmpty())
-                        {
-                            if (birth != "")
-                            {
-                                dBirth.FromString(birth);
-                                c->SetBirthday(dBirth);
-                            }
-                        }
-
-                        if (cFoundByPhone->GetNote().empty())
-                        {
-                            if (note != "")
-                            {
-                                c->SetNote(note);
-                            }
-                        }
-
-                        break;
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (birth != "")
-            {
-                dBirth.FromString(birth);
-            }
-            Contact* c = new Contact(name, phone, relation, type, dBirth, note);
-            int idx = FindIndexVectorContactByName(name);
-            ListContacts[idx].push_back(c);
-
-            //sap xep thu tu ten trong mang tuong ung theo chu cai dau tien cua ten
-            sort(ListContacts[idx].begin(), ListContacts[idx].end(), [](const Contact* c1, const Contact* c2) {
-                return GetLastName(c1->GetName()) < GetLastName(c2->GetName());
-             });
         }
     }
 
