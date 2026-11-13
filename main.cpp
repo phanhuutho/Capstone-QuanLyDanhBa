@@ -8,6 +8,7 @@ int main()
 	ContactManager manager("danh_ba.csv");
 	manager.InitContactManage();
 	manager.LoadFromFile();
-	manager.DisplayListContact();
+	vector<vector<Contact*>> lstASC = manager.GetListContacts();
+	DisplayListContact(lstASC);
 	return 0;
 }

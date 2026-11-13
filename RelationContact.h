@@ -26,5 +26,12 @@ public:
 	{
 		return TypeRelation == relation.TypeRelation && RelationName == relation.RelationName;
 	}
+
+	//Ham hien thi thong tin lien lac
+	void Display() const
+	{
+		cout << GetTypeRelation() << ":" << "[" << GetRelationName() << "]";
+		cout << endl;
+	}
 };
 

@@ -142,8 +142,10 @@
     <ClInclude Include="Contact.h" />
     <ClInclude Include="ContactManager.h" />
     <ClInclude Include="Date.h" />
+    <ClInclude Include="DisplayContactManager.h" />
     <ClInclude Include="MenuItem.h" />
     <ClInclude Include="RelationContact.h" />
+    <ClInclude Include="SortContact.h" />
     <ClInclude Include="Utilities.h" />
   </ItemGroup>
   <ItemGroup>

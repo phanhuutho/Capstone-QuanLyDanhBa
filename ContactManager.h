@@ -2,6 +2,7 @@
 #include "Contact.h"
 #include "RelationContact.h"
 #include "Date.h"
+#include "DisplayContactManager.h"
 #include "Utilities.h"
 #include <vector>
 #include <fstream>
@@ -129,55 +130,27 @@ public:
         return ListContacts;
     }
 
-    void DisplayListContact(vector<vector<Contact*>> &lstContact)
+    vector<RelationContact*> GetListRelations() const
     {
-        cout << left
-            << setw(10) << "[STT]"
-            << setw(15) << "| [Quan He]"
-            << setw(30) << "| [Ten]"
-            << setw(15) << "| [SDT]"
-            << setw(15) << "| [Ngay Sinh]"
-            << setw(25) << "| [Ghi Chu]"
-            << endl;
-        cout << string(110, '-') << endl;
-
-        int i = 0;
-        for (vector<Contact*> vector_c : lstContact)
-        {
-            for (Contact* c : vector_c)
-            {
-                cout << left
-                    << setw(10) << (i + 1)
-                    << setw(15) << ("| " + c->GetRelationName())
-                    << setw(30) << ("| " + c->GetName())
-                    << setw(15) << ("| " + c->GetPhone())
-                    << setw(15) << ("| " + c->GetBirthday().DateToString())
-                    << setw(45) << ("| " + c->GetNote())
-                    << endl;
-                i++;
-            }
-        }
-        cout << string(110, '-') << endl;
+        return ListRelations;
     }
-
-
 
     //Huu Tho -------------------------------------------
     ContactManager(string _filename) : Filename(_filename) {}
 
-    void CreditRelation(string _relation, int& type)
+    void CreditRelation(string relation, int& type)
     {
         RelationContact* re;
         if (ListRelations.size() == 0)
         {
             type = 1;
-            re = new RelationContact(type, _relation);
+            re = new RelationContact(type, relation);
             ListRelations.push_back(re);
         }
         else
         {
             bool chkExistRelation = false;
-            RelationContact* re = FindRelationByName(_relation, chkExistRelation);
+            RelationContact* re = FindRelationByName(relation, chkExistRelation);
             if (chkExistRelation)
             {
                 type = re->GetTypeRelation();
@@ -185,53 +158,18 @@ public:
             else
             {
                 type = ListRelations.size() + 1;
-                re = new RelationContact(type, _relation);
+                re = new RelationContact(type, relation);
                 ListRelations.push_back(re);
             }
         }
     }
 
-    void SortContact_ASC(vector<vector<Contact*>> &lstContact)
+    void AddContact(int type, string relation, string name, string phone, string birth = "", string note = "")
     {
-        for (vector<Contact*>& vector_c : lstContact)
-        {
-            sort(vector_c.begin(), vector_c.end(), [](const Contact* c1, const Contact* c2) {
-                return GetLastName(c1->GetName()) < GetLastName(c2->GetName());
-            });
-        }
-    }
-
-    //Hoan vi gia tri cua cap mang phan tu 0 vs 25, 1 vs 24, 2 vs 23,....., 12 vs 13
-    void Swap(vector<vector<Contact*>> &lstContact) const
-    {
-        int start = 0;
-        int end = lstContact.size() - 1;
-
-        while (start < end)
-        {
-            swap(lstContact[start], lstContact[end]);
-            start++;
-            end--;
-        }
-    }
-
-    void SortContact_DESC(vector<vector<Contact*>> &lstContact)
-    {
-        Swap(lstContact);
-        for (vector<Contact*>& vector_c : lstContact)
-        {
-            sort(vector_c.begin(), vector_c.end(), [](const Contact* c1, const Contact* c2) {
-                return GetLastName(c1->GetName()) > GetLastName(c2->GetName());
-            });
-        }
-    }
-
-    void AddContact(int _type, string _relation, string _name, string _phone, string _birth = "", string _note = "")
-    {
-        Date birth;
+        Date dBirth;
         bool foundByPhone = false;
 
-        Contact* cFoundByPhone = FindByPhone(_phone, foundByPhone);
+        Contact* cFoundByPhone = FindByPhone(phone, foundByPhone);
 
         if (foundByPhone)
         {
@@ -243,18 +181,18 @@ public:
                     {
                         if (cFoundByPhone->GetBirthday().IsEmpty())
                         {
-                            if (_birth != "")
+                            if (birth != "")
                             {
-                                birth.FromString(_birth);
-                                c->SetBirthday(birth);
+                                dBirth.FromString(birth);
+                                c->SetBirthday(dBirth);
                             }
                         }
 
                         if (cFoundByPhone->GetNote().empty())
                         {
-                            if (_note != "")
+                            if (note != "")
                             {
-                                c->SetNote(_note);
+                                c->SetNote(note);
                             }
                         }
 
@@ -265,16 +203,17 @@ public:
         }
         else
         {
-            if (_birth != "")
+            if (birth != "")
             {
-                birth.FromString(_birth);
+                dBirth.FromString(birth);
             }
-            Contact* c = new Contact(_name, _phone, _relation, _type, birth, _note);
-            int idx = FindIndexVectorContactByName(_name);
+            Contact* c = new Contact(name, phone, relation, type, dBirth, note);
+            int idx = FindIndexVectorContactByName(name);
             ListContacts[idx].push_back(c);
 
+            //sap xep thu tu ten trong mang tuong ung theo chu cai dau tien cua ten
             sort(ListContacts[idx].begin(), ListContacts[idx].end(), [](const Contact* c1, const Contact* c2) {
-                return GetLastName(c1->GetName()) < GetLastName(c2->GetName()); // Dung dau < de tang dan, > de giam dan
+                return GetLastName(c1->GetName()) < GetLastName(c2->GetName());
              });
         }
     }
@@ -288,114 +227,126 @@ public:
         string line, relation, name, phone, strBirth, note;
         Date birth;
         int type = 0; //default type relation = 0 truoc khi doc du lieu file danh ba. moi gia tri cua bien type tuong ung voi 1 relation name
+        int row = 0;
         while (getline(file, line)) { //doc du lieu tung dong va gan du lieu tung dong vao bien chuoi ky tu 'line'
-            stringstream ss(line); //tao doi duong ss stringstream de xu ly lay du lieu cua lien lac tu chuoi ky tu 'line' 
+            if (row > 0) //row = 0 la line header, bo qua khong can doc
+            {
+                stringstream ss(line); //tao doi duong ss stringstream de xu ly lay du lieu cua lien lac tu chuoi ky tu 'line' 
 
-            getline(ss, relation, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'relation'
-            getline(ss, name, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'name'
-            getline(ss, phone, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'phone'
-            getline(ss, strBirth, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'strBirth'
-            getline(ss, note, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'note'
+                getline(ss, relation, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'relation'
+                getline(ss, name, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'name'
+                getline(ss, phone, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'phone'
+                getline(ss, strBirth, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'strBirth'
+                getline(ss, note, ','); //tach theo ky tu '|' lan 1 va gan chuoi ky tu duoc tach o ben trai cho bien 'note'
 
-            birth.FromString(strBirth); //dung ham xu ly chuoi ngay thanh kieu du lieu Date
+                birth.FromString(strBirth); //dung ham xu ly chuoi ngay thanh kieu du lieu Date
 
-            CreditRelation(relation, type);
-            
-            AddContact(type, relation, name, phone, strBirth, note);
+                CreditRelation(relation, type);
+
+                AddContact(type, relation, name, phone, strBirth, note);
+            }
+            row++;
         }
         file.close();
     }
 
-    void MergeFromFile(string _filename, bool _overwrite = false)
+    void MergeFromFile(const string& filename, bool& isMerged, bool overwrite = false)
     {
-        ifstream file(_filename);
-        if (!file.is_open()) return;
+        ifstream file(filename);
+        if (!file.is_open()) 
+            return;
         string line, relation, name, phone, strBirth, note;
         Date birth;
         int type = ListRelations.size();
+        int row = 0;
         while (getline(file, line)) {
-            stringstream ss(line);
+            if (row > 0)
+            {
+                stringstream ss(line);
 
-            getline(ss, relation, ',');
-            getline(ss, name, ',');
-            getline(ss, phone, ',');
-            getline(ss, strBirth, ',');
-            getline(ss, note, ',');
+                getline(ss, relation, ',');
+                getline(ss, name, ',');
+                getline(ss, phone, ',');
+                getline(ss, strBirth, ',');
+                getline(ss, note, ',');
 
-            birth.FromString(strBirth);
+                birth.FromString(strBirth);
 
-            CreditRelation(relation, type);
+                CreditRelation(relation, type);
 
-            bool foundByPhone = false;
+                bool foundByPhone = false;
 
-            Contact* cFoundByPhone = FindByPhone(phone, foundByPhone);
+                Contact* cFoundByPhone = FindByPhone(phone, foundByPhone);
 
-            if (foundByPhone)
-            { 
-                if (_overwrite)
+                if (foundByPhone)
                 {
-                    for (vector<Contact*> vector_c : ListContacts)
+                    if (overwrite)
                     {
-                        for (Contact* c : vector_c)
+                        for (vector<Contact*> vector_c : ListContacts)
                         {
-                            if (cFoundByPhone->GetPhone() == c->GetPhone())
+                            for (Contact* c : vector_c)
                             {
-                                int type = ListRelations.size();
-                                CreditRelation(relation, type);
+                                if (cFoundByPhone->GetPhone() == c->GetPhone())
+                                {
+                                    int type = ListRelations.size();
+                                    CreditRelation(relation, type);
 
-                                c->SetName(name);
-                                c->SetTypeRelation(type);
-                                c->SetRelationName(relation);
-                                if (strBirth != "")
-                                {
-                                    birth.FromString(strBirth);
-                                    c->SetBirthday(birth);
+                                    c->SetName(name);
+                                    c->SetTypeRelation(type);
+                                    c->SetRelationName(relation);
+                                    if (strBirth != "")
+                                    {
+                                        birth.FromString(strBirth);
+                                        c->SetBirthday(birth);
+                                    }
+                                    if (note != "")
+                                    {
+                                        c->SetNote(note);
+                                    }
+                                    break;
                                 }
-                                if (note != "")
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (vector<Contact*> vector_c : ListContacts)
+                        {
+                            for (Contact* c : vector_c)
+                            {
+                                if (cFoundByPhone->GetPhone() == c->GetPhone())
                                 {
-                                    c->SetNote(note);
+                                    if (cFoundByPhone->GetBirthday().IsEmpty())
+                                    {
+                                        if (strBirth != "")
+                                        {
+                                            birth.FromString(strBirth);
+                                            c->SetBirthday(birth);
+                                        }
+                                    }
+
+                                    if (cFoundByPhone->GetNote().empty())
+                                    {
+                                        if (note != "")
+                                        {
+                                            c->SetNote(note);
+                                        }
+                                    }
+
+                                    break;
                                 }
-                                break;
                             }
                         }
                     }
                 }
                 else
                 {
-                    for (vector<Contact*> vector_c : ListContacts)
-                    {
-                        for (Contact* c : vector_c)
-                        {
-                            if (cFoundByPhone->GetPhone() == c->GetPhone())
-                            {
-                                if (cFoundByPhone->GetBirthday().IsEmpty())
-                                {
-                                    if (strBirth != "")
-                                    {
-                                        birth.FromString(strBirth);
-                                        c->SetBirthday(birth);
-                                    }
-                                }
-
-                                if (cFoundByPhone->GetNote().empty())
-                                {
-                                    if (note != "")
-                                    {
-                                        c->SetNote(note);
-                                    }
-                                }
-
-                                break;
-                            }
-                        }
-                    }
+                    AddContact(type, relation, name, phone, strBirth, note);
                 }
             }
-            else
-            {
-                AddContact(type, relation, name, phone, strBirth, note);
-            }
+            row++;
         }
+        isMerged = true;
         file.close();
     }
 
@@ -429,34 +380,66 @@ public:
         return result;
     }
 
-    void DisplayListContact(vector<Contact*> &vector_c)
+    void WriteFile(const string &filename, bool &isSuccess)
     {
-        cout << left
-            << setw(10) << "[STT]"
-            << setw(15) << "| [Quan He]"
-            << setw(30) << "| [Ten]"
-            << setw(15) << "| [SDT]"
-            << setw(15) << "| [Ngay Sinh]"
-            << setw(25) << "| [Ghi Chu]"
-            << endl;
-        cout << string(110, '-') << endl;
+        isSuccess = false;
+        ofstream outFile(filename, ios::out);
 
-        int i = 0;
-        for (Contact* c : vector_c)
+        if (!outFile.is_open())
         {
-            cout << left
-                << setw(10) << (i + 1)
-                << setw(15) << ("| " + c->GetRelationName())
-                << setw(30) << ("| " + c->GetName())
-                << setw(15) << ("| " + c->GetPhone())
-                << setw(15) << ("| " + c->GetBirthday().DateToString())
-                << setw(45) << ("| " + c->GetNote())
-                << endl;
-            i++;
+            isSuccess = false;
+            cout << "Error: Not open/create file: " << filename << endl;
+            return;
         }
-        cout << string(110, '-') << endl;
+
+        outFile << "Nhom,Ten,SDT,Ngay Sinh,Ghi Chu";
+        outFile << "\n";
+        for (vector<Contact*> vector_c : ListContacts)
+        {
+            for (Contact* c : vector_c)
+            {
+                outFile << c->GetRelationName();
+                outFile << ",";
+                outFile << c->GetName();
+                outFile << ",";
+                outFile << c->GetPhone();
+                outFile << ",";
+                outFile << c->GetBirthday().DateToString();
+                outFile << ",";
+                outFile << c->GetNote();
+                outFile << "\n";
+            }
+        }
+        outFile.close();
+        isSuccess = true;
     }
 
+    void EditRelation(RelationContact& reEdit)
+    {
+        for (RelationContact* re : ListRelations)
+        {
+            if (re->GetTypeRelation() == reEdit.GetTypeRelation())
+            {
+                re->SetRelationName(reEdit.GetRelationName());
+            }
+        }
+    }
+
+    void DeleteRelation(RelationContact& reDelete)
+    {
+        for (vector<RelationContact*>::iterator it = ListRelations.begin(); it != ListRelations.end();)
+        {
+            if ((*it)->GetTypeRelation() == reDelete.GetTypeRelation())
+            {
+                delete* it;
+                it = ListRelations.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    }
     //---------------------------------------------------
 
 
